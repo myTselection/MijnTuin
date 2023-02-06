@@ -43,7 +43,7 @@ async def dry_setup(hass, config_entry, async_add_devices):
     await componentData._force_update()
     # assert componentData._usage_details is not None
     
-    sensor = ComponentSensor(componentData, hass, activityType)
+    sensor = ComponentSensor(componentData, hass, "activityType")
     sensors.append(sensor)
     
     # sensorInternet = ComponentInternetSensor(componentData, hass)
@@ -98,6 +98,7 @@ class ComponentData:
         if self._session:
             await self._hass.async_add_executor_job(lambda: self._session.login(self._username, self._password))
             _LOGGER.info(f"{NAME} init login completed")
+            await self._hass.async_add_executor_job(lambda: self._session.login(self._username, self._password))
             self._lastupdate = datetime.now()
             
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

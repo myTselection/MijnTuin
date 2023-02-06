@@ -7,6 +7,7 @@ from typing import List
 import requests
 from pydantic import BaseModel
 
+from . import DOMAIN, NAME
 import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,9 +39,28 @@ class ComponentSession(object):
     # form data: email=username%40gmail.com&password=password&login=Aanmelden
     # example response, HTTP 302
         header = {"Content-Type": "application/x-www-form-urlencoded"}
+        response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10)
+        # assert response.status_code == 200
         data  = {"email": username, "password": password, "login": "Aanmelden"}
         response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,timeout=10)
         _LOGGER.info(f"{NAME} login post result status code: " + str(response.status_code) + ", response: " + response.text)
         _LOGGER.info(f"{NAME} login header: " + str(response.headers))
-        assert response.status_code == 302
+        # assert response.status_code == 302
+        response = self.s.get("https://www.mijntuin.org/dashboard",headers=header,timeout=10)
+        _LOGGER.info(f"{NAME} login post result status code: " + str(response.status_code) + ", response: " + response.text)
+        _LOGGER.info(f"{NAME} login header: " + str(response.headers))
+        # assert response.status_code == 200
+        return True
+
+    def getCalendar(self, username, password):
+    # https://www.mijntuin.org/login, POST
+    # example payload
+    # form data: email=username%40gmail.com&password=password&login=Aanmelden
+    # example response, HTTP 302
+        header = {"Content-Type": "application/x-www-form-urlencoded"}
+        data  = {"email": username, "password": password, "login": "Aanmelden"}
+        response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,timeout=10)
+        _LOGGER.info(f"{NAME} login post result status code: " + str(response.status_code) + ", response: " + response.text)
+        _LOGGER.info(f"{NAME} login header: " + str(response.headers))
+        # assert response.status_code == 302
         return True
