@@ -1,16 +1,16 @@
 {
     "config": {
-        "title": "Youfone.be",
+        "title": "MijnTuin",
         "step": {
             "user": {
-                "description": "Setup a Youfone.be sensor, username and password are required.",
+                "description": "Username and password are required.",
                 "data": {
                     "username": "Username",
                     "password": "Password"
                 }
             },
             "edit": {
-                "description": "Setup a Youfone.be sensor, username and password are required.",
+                "description": "Username and password are required.",
                 "data": {
                     "username": "Username",
                     "password": "Password"
@@ -28,7 +28,7 @@
     "options": {
         "step": {
             "edit": {
-                "description": "Setup a Youfone.be sensor, username and password are required.",
+                "description": "Username and password are required.",
                 "data": {
                     "username": "Username",
                     "password": "Password"
