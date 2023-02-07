@@ -39,18 +39,25 @@ class ComponentSession(object):
     # form data: email=username%40gmail.com&password=password&login=Aanmelden
     # example response, HTTP 302
         header = {"Content-Type": "application/x-www-form-urlencoded"}
-        response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10)
+        response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10,allow_redirects=False)
+        _LOGGER.info(f"{NAME} https://www.mijntuin.org get response.status_code {response.status_code}, login header: {response.headers}")
+        response = self.s.get("https://www.mijntuin.org/login",headers=header,timeout=10,allow_redirects=False)
         # assert response.status_code == 200
+        _LOGGER.info(f"{NAME} https://www.mijntuin.org/login get response.status_code {response.status_code}, login header: {response.headers}")
         data  = {"email": username, "password": password, "login": "Aanmelden"}
-        response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,timeout=10)
-        _LOGGER.info(f"{NAME} login post result status code: " + str(response.status_code) + ", response: " + response.text)
-        _LOGGER.info(f"{NAME} login header: " + str(response.headers))
+        response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,timeout=10,allow_redirects=False)
+        _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}")
+        _LOGGER.info(f"{NAME} response.status_code {response.status_code}, login header: {response.headers}")
         # assert response.status_code == 302
-        response = self.s.get("https://www.mijntuin.org/dashboard",headers=header,timeout=10)
-        _LOGGER.info(f"{NAME} login post result status code: " + str(response.status_code) + ", response: " + response.text)
-        _LOGGER.info(f"{NAME} login header: " + str(response.headers))
+        response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10,allow_redirects=False)
+        response = self.s.get("https://www.mijntuin.org/dashboard",headers=header,timeout=10,allow_redirects=False)
+        _LOGGER.info(f"{NAME} https://www.mijntuin.org/dashboard get response.status_code {response.status_code}, login header: {response.headers}")
+        _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}")
         # assert response.status_code == 200
-        return True
+        soup = BeautifulSoup(response.text, 'html.parser')
+        calendarlink = soup.find_all('li', id_='calendar').a.get('href')
+        _LOGGER.info(f"{NAME} calendarlink {calendarlinks}")
+        return calendarlink
 
     def getCalendar(self, username, password):
     # https://www.mijntuin.org/login, POST
@@ -58,9 +65,8 @@ class ComponentSession(object):
     # form data: email=username%40gmail.com&password=password&login=Aanmelden
     # example response, HTTP 302
         header = {"Content-Type": "application/x-www-form-urlencoded"}
-        data  = {"email": username, "password": password, "login": "Aanmelden"}
-        response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,timeout=10)
-        _LOGGER.info(f"{NAME} login post result status code: " + str(response.status_code) + ", response: " + response.text)
-        _LOGGER.info(f"{NAME} login header: " + str(response.headers))
+        response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10,allow_redirects=False)
+        _LOGGER.info(f"{NAME} response.status_code {response.status_code}, login header: {response.headers}")
+        _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}")
         # assert response.status_code == 302
         return True
