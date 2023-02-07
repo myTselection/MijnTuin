@@ -59,14 +59,21 @@ class ComponentSession(object):
         _LOGGER.info(f"{NAME} calendarlink {calendarlinks}")
         return calendarlink
 
-    def getCalendar(self, username, password):
+    def getCalendar(self, calendarlink):
     # https://www.mijntuin.org/login, POST
     # example payload
     # form data: email=username%40gmail.com&password=password&login=Aanmelden
     # example response, HTTP 302
         header = {"Content-Type": "application/x-www-form-urlencoded"}
-        response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10,allow_redirects=False)
-        _LOGGER.info(f"{NAME} response.status_code {response.status_code}, login header: {response.headers}")
-        _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}")
+        response = self.s.get(calendarlink,headers=header,timeout=10,allow_redirects=False)
+        _LOGGER.info(f"{NAME} calendarlink response.status_code {response.status_code}, login header: {response.headers}")
+        _LOGGER.info(f"{NAME} calendarlink result status code: {response.status_code}, response: {response.text}")
         # assert response.status_code == 302
+        div_calendar = soup.find('div', class_='whitebox')
+        div_months =   div_calendar.find_all('div', id_='tab*')
+        
+        for div_month in div_months:
+            li_actions = div_month.find_all('li', 'title')
+            for li_action in li_actions:
+                _LOGGER.info(f"{NAME} li_action {li_action}")
         return True
