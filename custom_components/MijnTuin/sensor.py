@@ -98,7 +98,7 @@ class ComponentData:
         if self._session:
             await self._hass.async_add_executor_job(lambda: self._session.login(self._username, self._password))
             _LOGGER.info(f"{NAME} init login completed")
-            await self._hass.async_add_executor_job(lambda: self._session.login(self._username, self._password))
+            # await self._hass.async_add_executor_job(lambda: self._session.login(self._username, self._password))
             self._lastupdate = datetime.now()
             
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

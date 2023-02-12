@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 from typing import List
 import requests
 from pydantic import BaseModel
+from bs4 import BeautifulSoup
 
 from . import DOMAIN, NAME
 import voluptuous as vol
@@ -43,7 +44,7 @@ class ComponentSession(object):
         _LOGGER.info(f"{NAME} https://www.mijntuin.org get response.status_code {response.status_code}, login header: {response.headers}")
         response = self.s.get("https://www.mijntuin.org/login",headers=header,timeout=10,allow_redirects=False)
         # assert response.status_code == 200
-        _LOGGER.info(f"{NAME} https://www.mijntuin.org/login get response.status_code {response.status_code}, login header: {response.headers}")
+        _LOGGER.info(f"{NAME} https://www.mijntuin.org/login get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
         data  = {"email": username, "password": password, "login": "Aanmelden"}
         response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,timeout=10,allow_redirects=False)
         _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}")
@@ -55,7 +56,7 @@ class ComponentSession(object):
         _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}")
         # assert response.status_code == 200
         soup = BeautifulSoup(response.text, 'html.parser')
-        calendarlink = soup.find_all('li', id_='calendar').a.get('href')
+        calendarlink = soup.find('li', id_='calendar').a.get('href')
         _LOGGER.info(f"{NAME} calendarlink {calendarlinks}")
         return calendarlink
 
