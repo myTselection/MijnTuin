@@ -33,6 +33,7 @@ class ComponentSession(object):
     def __init__(self):
         self.s = requests.Session()
         self.s.headers["User-Agent"] = "Python/3"
+        self.cookies = dict()
 
     def login(self, username, password):
     # https://www.mijntuin.org/login, POST
@@ -41,19 +42,26 @@ class ComponentSession(object):
     # example response, HTTP 302
         header = {"Content-Type": "application/x-www-form-urlencoded"}
         response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10,allow_redirects=False)
-        _LOGGER.info(f"{NAME} https://www.mijntuin.org get response.status_code {response.status_code}, login header: {response.headers}")
-        response = self.s.get("https://www.mijntuin.org/login",headers=header,timeout=10,allow_redirects=False)
+        _LOGGER.info(f"{NAME} https://www.mijntuin.org get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
+        self.cookies["PHPSESSID"] = response.cookies.get("PHPSESSID")
+        self.cookies["session"] = response.cookies.get("session")
+        _LOGGER.info(f"cookies: {self.cookies}")
+        response = self.s.get("https://www.mijntuin.org/login",headers=header, cookies=self.cookies,timeout=10,allow_redirects=False)
         # assert response.status_code == 200
         _LOGGER.info(f"{NAME} https://www.mijntuin.org/login get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
         data  = {"email": username, "password": password, "login": "Aanmelden"}
-        response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,timeout=10,allow_redirects=False)
-        _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}")
-        _LOGGER.info(f"{NAME} response.status_code {response.status_code}, login header: {response.headers}")
+        # self.cookies = response.cookies
+        response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,cookies=self.cookies, timeout=10,allow_redirects=False)
+        _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
+        _LOGGER.info(f"{NAME} response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
         # assert response.status_code == 302
-        response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10,allow_redirects=False)
-        response = self.s.get("https://www.mijntuin.org/dashboard",headers=header,timeout=10,allow_redirects=False)
-        _LOGGER.info(f"{NAME} https://www.mijntuin.org/dashboard get response.status_code {response.status_code}, login header: {response.headers}")
-        _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}")
+        # self.cookies = response.cookies
+        response = self.s.get("https://www.mijntuin.org/",headers=header,cookies=self.cookies,timeout=10,allow_redirects=False)
+        # self.cookies = response.cookies
+        response = self.s.get("https://www.mijntuin.org/dashboard",headers=header,cookies=self.cookies,timeout=10,allow_redirects=False)
+        # self.cookies = response.cookies
+        _LOGGER.info(f"{NAME} https://www.mijntuin.org/dashboard get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
+        _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
         # assert response.status_code == 200
         soup = BeautifulSoup(response.text, 'html.parser')
         calendarlink = soup.find('li', id_='calendar').a.get('href')
@@ -66,7 +74,8 @@ class ComponentSession(object):
     # form data: email=username%40gmail.com&password=password&login=Aanmelden
     # example response, HTTP 302
         header = {"Content-Type": "application/x-www-form-urlencoded"}
-        response = self.s.get(calendarlink,headers=header,timeout=10,allow_redirects=False)
+        response = self.s.get(calendarlink,headers=header,cookies=self.cookies,timeout=10,allow_redirects=False)
+        # self.cookies = response.cookies
         _LOGGER.info(f"{NAME} calendarlink response.status_code {response.status_code}, login header: {response.headers}")
         _LOGGER.info(f"{NAME} calendarlink result status code: {response.status_code}, response: {response.text}")
         # assert response.status_code == 302
