@@ -34,6 +34,7 @@ class ComponentSession(object):
         self.s = requests.Session()
         self.s.headers["User-Agent"] = "Python/3"
         self.cookies = dict()
+        self.calendarlink = None
 
     def login(self, username, password):
     # https://www.mijntuin.org/login, POST
@@ -64,9 +65,9 @@ class ComponentSession(object):
         _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
         # assert response.status_code == 200
         soup = BeautifulSoup(response.text, 'html.parser')
-        calendarlink = soup.find('li', id_='calendar').a.get('href')
-        _LOGGER.info(f"{NAME} calendarlink {calendarlinks}")
-        return calendarlink
+        self.calendarlink = soup.find('li', id_='calendar').a.get('href')
+        _LOGGER.info(f"{NAME} calendarlink {self.calendarlink}")
+        return self.calendarlink
 
     def getCalendar(self, calendarlink):
     # https://www.mijntuin.org/login, POST
