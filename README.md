@@ -38,9 +38,28 @@ All other files just contain boilerplat code for the integration to work wtihin 
 <p align="center"><img src="https://raw.githubusercontent.com/myTselection/MijnTuin/master/Markdown%20Card%20example.png"/></p>
 
 ```
-type: vertical-stack
-cards:
-  - type: markdown
-    content: >-
-		TODO
+type: markdown
+content: >-
+  ## Activiteiten deze maand: {{states('sensor.mijn_tuin')}}
+
+
+  {% set activities = states | rejectattr("entity_id","eq","sensor.mijn_tuin") |
+  selectattr("entity_id", "match","^sensor.mijn_tuin_*") | list %}
+
+  {% for activity_device in activities %}
+    {% set activity = activity_device.entity_id %}
+    {% if state_attr(activity,"actionsThisMonth") > 0 %}
+  #### {{state_attr(activity,'activityType') }}:
+    {% set this_month = now().strftime("%B") %}
+    {% for plant in state_attr(activity,this_month)  %}
+  - [<img
+      src="{{ plant.get('photo').get('src') }} " width="30"></img> {{ plant.get('name') }}]({{ plant.get('link') }}): {{ plant.get('description') }} 
+    {% endfor %}
+    {% endif %}
+  {% endfor %}
+
+
+  ### Planten: 
+
+  {{state_attr('sensor.mijn_tuin','Plants')}}
 ```
