@@ -1,5 +1,7 @@
 import requests
 import logging
+import datetime
+import calendar
 import json
 from urllib.parse import urlsplit, parse_qs
 from bs4 import BeautifulSoup
@@ -84,7 +86,7 @@ def getCalendar(calendarlink):
     tab_divs = div_calendar.select('div[id^="tab"]')
 
     # create an empty dictionary to store the data
-    calendar = dict()
+    calendarDict = dict()
 
     # print the id and text content of each selected div element
     for tab_div in tab_divs:
@@ -94,36 +96,64 @@ def getCalendar(calendarlink):
         li_tags = tab_div.find_all('li')
 
         # create an empty list to store the data for each section
-        month_actions = []
+        month_actions = {}
+
+        currentSection = None
 
         # loop through each li tag
         for li_tag in li_tags:
             # check if the li tag has a class of 'title'
             if li_tag.has_attr('class') and 'title' in li_tag['class']:
                 # create a new section dictionary
-                section = {'title': li_tag.text.strip(), 'items': []}
-                month_actions.append(section)
+                currentSection = li_tag.text.strip()
+                # section = {'title': li_tag.text.strip(), 'items': []}
+                month_actions[currentSection] = []
             else:
                 # create a new item dictionary
-                item = {'photo': {}, 'name': '', 'extra': {}, 'buttons': {}}
+                item = {'name': '', 'description': '','photo': {}, 'link': '', 'buttons':{}}
                 item['photo']['alt'] = li_tag.find('img').get('alt', '')
-                item['photo']['class'] = li_tag.find('img').get('class', [])
-                item['name'] = li_tag.find('span', class_='name').text.strip()
-                item['extra']['text'] = li_tag.find('span', class_='extra').text.strip()
-                item['extra']['link'] = li_tag.find('span', class_='extra').find('a').get('href', '')
+                item['photo']['src'] = li_tag.find('img').get('src', '')
+                nameAndDescription = li_tag.find('span', class_='name').text.strip().split(": ")
+                item['name'] = nameAndDescription[0]
+                item['description'] = nameAndDescription[1].capitalize()
+                item['link'] = li_tag.find('span', class_='extra').find('a').get('href', '')
                 if li_tag.find('span', class_='buttons'):
                     item['buttons']['text'] = li_tag.find('span', class_='buttons').text.strip()
                     item['buttons']['link'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
                 # append the item to the current section
-                month_actions[-1]['items'].append(item)
-        calendar[month] = month_actions
+                month_actions[currentSection].append(item)
+                # month_actions[-1]['items'].append(item)
+        calendarDict[month] = month_actions
 
-    # convert the dictionary into JSON format
-    json_data = json.dumps(calendar)
+    _activities = {}
+    _activityType = "Bekalken"
+    for month, monthData in calendarDict.items():
+        month_name = calendar.month_name[int(month.split("-")[0])]
+        for activity, plants in monthData.items():
+            if activity == _activityType:
+                if _activities.get(month_name):
+                    _activities[month_name].append(plants)
+                else:
+                    _activities[month_name] = [plants]
 
-    # print the JSON data
-    print(json_data)
-    return True
+
+    _activities = dict()
+    _months = dict()
+    _plants = dict()
+    for month, monthData in calendarDict.items():
+        month_name = calendar.month_name[int(month.split("-")[0])]
+        # _LOGGER.info(f"Mijn Tuin updating month {month_name} for acitivty {_activityType}")
+        for activity, plants in monthData.items():
+            _activities[activity] = _activities.get(activity,0) + 1
+            _months[month_name] = _months.get(month_name,0) + 1
+            for plant in plants:
+                _plants[plant.get("name")] = _plants.get(plant.get("name"),0) + 1
+    print(f"_activities : {_activities.keys()}")
+    for activity in _activities.keys():
+        print(f"activity : {activity}")
+    keys_str = ', '.join(str(key) for key in _activities.keys())
+    print(f"keys_str : {keys_str}")
+    return calendarDict
 
 calendarlink = login(USERNAME,PASSWORD)
 calendar = getCalendar(calendarlink)
