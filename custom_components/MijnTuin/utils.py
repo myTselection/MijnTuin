@@ -5,11 +5,14 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta
 from typing import List
 import requests
-from pydantic import BaseModel
 from bs4 import BeautifulSoup
 
-from . import DOMAIN, NAME
+# from . import DOMAIN, NAME
+
+DOMAIN = "mijntuin"
+NAME = "Mijn Tuin"
 import voluptuous as vol
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,17 +44,20 @@ class ComponentSession(object):
     # example payload
     # form data: email=username%40gmail.com&password=password&login=Aanmelden
     # example response, HTTP 302
-        header = {"Content-Type": "application/x-www-form-urlencoded"}
+        header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE"}
         response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=10,allow_redirects=False)
         _LOGGER.info(f"{NAME} https://www.mijntuin.org get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
         self.cookies["PHPSESSID"] = response.cookies.get("PHPSESSID")
         self.cookies["session"] = response.cookies.get("session")
+        self.s.cookies["PHPSESSID"] = response.cookies.get("PHPSESSID")
+        self.s.cookies["session"] = response.cookies.get("session")
         _LOGGER.info(f"cookies: {self.cookies}")
         response = self.s.get("https://www.mijntuin.org/login",headers=header, cookies=self.cookies,timeout=10,allow_redirects=False)
         # assert response.status_code == 200
         _LOGGER.info(f"{NAME} https://www.mijntuin.org/login get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
         data  = {"email": username, "password": password, "login": "Aanmelden"}
         # self.cookies = response.cookies
+        header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE","referer":"https://www.mijntuin.org/login"}
         response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,cookies=self.cookies, timeout=10,allow_redirects=False)
         _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
         _LOGGER.info(f"{NAME} response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
@@ -65,8 +71,10 @@ class ComponentSession(object):
         _LOGGER.info(f"{NAME} login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
         # assert response.status_code == 200
         soup = BeautifulSoup(response.text, 'html.parser')
-        self.calendarlink = soup.find('li', id_='calendar').a.get('href')
-        _LOGGER.info(f"{NAME} calendarlink {self.calendarlink}")
+        li_calendar  = soup.select_one("li#calendar")
+        if li_calendar:
+            self.calendarlink = li_calendar.a.get('href')
+        _LOGGER.debug(f"{NAME} calendarlink {self.calendarlink}")
         return self.calendarlink
 
     def getCalendar(self, calendarlink):
@@ -88,3 +96,4 @@ class ComponentSession(object):
             for li_action in li_actions:
                 _LOGGER.info(f"{NAME} li_action {li_action}")
         return True
+    

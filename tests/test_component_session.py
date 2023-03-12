@@ -2,15 +2,18 @@ import unittest
 import requests
 import logging
 import json
-# from "../custom_components/bibliotheek_be/utils" import .
 import sys
 sys.path.append('../custom_components/MijnTuin/')
+
 from utils import ComponentSession
 from secret import USERNAME, PASSWORD
 
 _LOGGER = logging.getLogger(__name__)
 
-#run this test on command line with: python -m unittest test_component_session
+
+
+# pip install homeassistant
+# run this test on command line with: python -m unittest test_component_session
 
 logging.basicConfig(level=logging.DEBUG)
 
