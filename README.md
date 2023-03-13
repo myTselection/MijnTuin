@@ -38,28 +38,21 @@ All other files just contain boilerplat code for the integration to work wtihin 
 <p align="center"><img src="https://raw.githubusercontent.com/myTselection/MijnTuin/master/Markdown%20Card%20example.png"/></p>
 
 ```
-type: markdown
-content: >-
-  ## Activiteiten deze maand: {{states('sensor.mijn_tuin')}}
+## Activiteiten deze maand: {{states('sensor.mijn_tuin')}}
 
-
-  {% set activities = states | rejectattr("entity_id","eq","sensor.mijn_tuin") |
-  selectattr("entity_id", "match","^sensor.mijn_tuin_*") | list %}
-
-  {% for activity_device in activities %}
-    {% set activity = activity_device.entity_id %}
-    {% if state_attr(activity,"actionsThisMonth") > 0 %}
-  #### {{state_attr(activity,'activityType') }}:
-    {% set this_month = now().strftime("%B") %}
-    {% for plant in state_attr(activity,this_month)  %}
-  - [<img
-      src="{{ plant.get('photo').get('src') }} " width="30"></img> {{ plant.get('name') }}]({{ plant.get('link') }}): {{ plant.get('description') }} 
-    {% endfor %}
-    {% endif %}
+{% set activities = states | rejectattr("entity_id","eq","sensor.mijn_tuin") | selectattr("entity_id", "match","^sensor.mijn_tuin_*") | list %}
+{% for activity_device in activities %}
+{% set activity = activity_device.entity_id %}
+{% if state_attr(activity,"actionsThisMonth") > 0 %}
+  {% set this_month = now().strftime("%B") %}
+<details><summary><b>{{state_attr(activity,'activityType') }}: </b> ({{state_attr(activity,this_month)|length }})</summary>
+  {% for plant in state_attr(activity,this_month)  %}
+- [<img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b>{{ plant.get('name') }}</b>]({{ plant.get('link') }}): {{ plant.get('description') }}
   {% endfor %}
+</details></br>
+{% endif %}
+{% endfor %}
 
-
-  ### Planten: 
-
-  {{state_attr('sensor.mijn_tuin','Plants')}}
+### Planten: 
+{{state_attr('sensor.mijn_tuin','Plants')}}
 ```
