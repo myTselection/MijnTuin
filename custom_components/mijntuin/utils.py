@@ -3,6 +3,7 @@ import logging
 import pprint
 from collections import defaultdict
 from datetime import date, datetime, timedelta
+import calendar
 from typing import List
 import requests
 from bs4 import BeautifulSoup
@@ -76,7 +77,28 @@ class ComponentSession(object):
             self.calendarlink = li_calendar.a.get('href')
         _LOGGER.debug(f"{NAME} calendarlink {self.calendarlink}")
         return self.calendarlink
+    
+    def getTaskDetails(self, tasklink):
+        # https://www.mijntuin.org/login, POST
+        # example payload
+        # form data: email=username%40gmail.com&password=password&login=Aanmelden
+        # example response, HTTP 302
+        header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE"}
+        response = self.s.get(tasklink,headers=header,cookies=self.cookies,timeout=10,allow_redirects=False)
+        # cookies = response.cookies
+        _LOGGER.debug(f"{NAME} tasklink response.status_code {response.status_code}, login header: {response.headers}")
+        # _LOGGER.info(f"{NAME} calendarlink result status code: {response.status_code}, response: {response.text}")
+        # assert response.status_code == 302
+        soup = BeautifulSoup(response.text, 'html.parser')
+        div_plantAction = soup.find('div', {'class': 'whitebox withPadding plantActions'})
+        # select all div elements whose id starts with "tab"
+        div_description = div_plantAction.find('div', {'class': 'description'})
 
+        if div_description:
+            return div_description.text.strip().replace("\n","<br/>")
+        else:
+            return ''
+    
     def getCalendar(self, calendarlink):
         # https://www.mijntuin.org/login, POST
         # example payload
@@ -93,13 +115,16 @@ class ComponentSession(object):
         # select all div elements whose id starts with "tab"
         tab_divs = div_calendar.select('div[id^="tab"]')
 
+        currMonth = datetime.now().strftime("%B")
+
         # create an empty dictionary to store the data
-        calendar = dict()
+        calendarDict = dict()
 
         # print the id and text content of each selected div element
         for tab_div in tab_divs:
             month = tab_div.get('id')
             month = month.replace("tab-","")
+            month_name = calendar.month_name[int(month.split("-")[0])]
             # find all the li tags within the div tag
             li_tags = tab_div.find_all('li')
 
@@ -125,6 +150,8 @@ class ComponentSession(object):
                     item['name'] = nameAndDescription[0]
                     item['description'] = nameAndDescription[1].capitalize()
                     item['link'] = li_tag.find('span', class_='extra').find('a').get('href', '')
+                    if currMonth == month_name and item.get('link'):
+                        item['details'] = self.getTaskDetails(item.get('link'))
                     if li_tag.find('span', class_='buttons'):
                         item['buttons']['text'] = li_tag.find('span', class_='buttons').text.strip()
                         item['buttons']['link'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
@@ -132,7 +159,8 @@ class ComponentSession(object):
                     month_actions[currentSection].append(item)
                     # month_actions[-1]['items'].append(item)
             _LOGGER.debug(f"{NAME} calendar month {month}, month_actions {month_actions}")
-            calendar[month] = month_actions
+            calendarDict[month] = month_actions
 
-        return calendar
+        return calendarDict
         
+
