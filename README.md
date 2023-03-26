@@ -47,7 +47,13 @@ All other files just contain boilerplat code for the integration to work wtihin 
   {% set this_month = now().strftime("%B") %}
 <details><summary><b>{{state_attr(activity,'activityType') }}: </b> ({{state_attr(activity,this_month)|length }})</summary>
   {% for plant in state_attr(activity,this_month)  %}
-- [<img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b>{{ plant.get('name') }}</b>]({{ plant.get('link') }}): {{ plant.get('description') }}
+- <details><summary> <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b>{{ plant.get('name') }}</b>: {{ plant.get('description') }}</summary>
+  {% if plant.get('details') and plant.get('details','')|length  > 0 %}
+  
+  - {{ plant.get('details') }}
+  {% endif %}
+  - <a href="{{ plant.get('link') }}" target="_blank">link</a></details>
+  
   {% endfor %}
 </details></br>
 {% endif %}

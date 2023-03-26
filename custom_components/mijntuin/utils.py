@@ -95,7 +95,7 @@ class ComponentSession(object):
         div_description = div_plantAction.find('div', {'class': 'description'})
 
         if div_description:
-            return div_description.text.strip().replace("\n","<br/>")
+            return div_description.text.strip().replace("\n","<br/>").replace("\r","<br/>")
         else:
             return ''
     
