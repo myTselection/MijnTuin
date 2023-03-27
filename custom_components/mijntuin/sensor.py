@@ -269,10 +269,9 @@ class ComponentSensor(Entity):
                             self._activities[month_name] = plants
                     else:
                         if self._activities.get(month_name):
-                            
                             self._activities[month_name] = self._activities.get(month_name, "") + ", " + ', '.join(plant.get("name","") for plant in plants)
                         else:
-                            self._activities[month_name] = ','.join(plant.get("name","") for plant in plants)
+                            self._activities[month_name] = ', '.join(plant.get("name","") for plant in plants)
 
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
