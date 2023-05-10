@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 /*.url
 /tests/secret.py
+MijnTuin.org_Plantenlijst.xls

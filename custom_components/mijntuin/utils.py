@@ -38,7 +38,7 @@ class ComponentSession(object):
         self.s = requests.Session()
         self.s.headers["User-Agent"] = "Python/3"
         self.cookies = dict()
-        self.calendarlink = None
+        self.gardenlink = None
 
     def login(self, username, password):
     # https://www.mijntuin.org/login, POST
@@ -74,9 +74,10 @@ class ComponentSession(object):
         soup = BeautifulSoup(response.text, 'html.parser')
         li_calendar  = soup.select_one("li#calendar")
         if li_calendar:
-            self.calendarlink = li_calendar.a.get('href')
-        _LOGGER.debug(f"{NAME} calendarlink {self.calendarlink}")
-        return self.calendarlink
+            self.gardenlink = li_calendar.a.get('href')
+        _LOGGER.debug(f"{NAME} calendarlink {self.gardenlink}")
+        self.gardenlink = self.gardenlink.replace('/calendar','')
+        return self.gardenlink
     
     def getTaskDetails(self, tasklink):
         # https://www.mijntuin.org/login, POST
@@ -92,28 +93,39 @@ class ComponentSession(object):
         soup = BeautifulSoup(response.text, 'html.parser')
         
         #old code:
-        # div_plantAction = soup.find('div', {'class': 'whitebox withPadding plantActions'})
+        div_plantAction = soup.find('div', {'class': 'plantActions'})
         # # select all div elements whose id starts with "tab"
-        # description = div_plantAction.find('div', {'class': 'description'})
+        description = div_plantAction.find('div', {'class': 'description mt-3'})
 
-        # find the first <meta> tag with the property attribute equal to 'og:description'
-        meta_tag = soup.find('meta', {'property': 'og:description'})
+        # # find the first <meta> tag with the property attribute equal to 'og:description'
+        # tag = soup.find('meta', {'property': 'og:description'})
 
-        # extract the content attribute of the <meta> tag
-        description = meta_tag.get('content')
+        # # extract the content attribute of the <meta> tag
+        # description = tag.get('content')
 
         if description:
-            return description.strip().replace("\n","<br/>").replace("\r","<br/>")
+           description = description.text.strip().replace("\n","<br/>").replace("\r","<br/>")
         else:
-            return ''
+           description =  ''
+
+        # # Find the div tag with id "plants"
+        # div_plants = soup.find('div', {'id': 'plants'})
+
+        # # Find the link of the "Info" page of the plant within the div tag with id "plants"
+        # link = div_plants.find('a')['href']
+        
+        # return [link, description]
+
+        return description
+
     
-    def getCalendar(self, calendarlink):
+    def getCalendar(self):
         # https://www.mijntuin.org/login, POST
         # example payload
         # form data: email=username%40gmail.com&password=password&login=Aanmelden
         # example response, HTTP 302
         header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE"}
-        response = self.s.get(calendarlink,headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
+        response = self.s.get(self.gardenlink+'/calendar',headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
         # cookies = response.cookies
         _LOGGER.debug(f"{NAME} calendarlink response.status_code {response.status_code}, login header: {response.headers}")
         # _LOGGER.info(f"{NAME} calendarlink result status code: {response.status_code}, response: {response.text}")
@@ -160,9 +172,9 @@ class ComponentSession(object):
                     item['link'] = li_tag.find('span', class_='extra').find('a').get('href', '')
                     if currMonth == month_name and item.get('link'):
                         item['details'] = self.getTaskDetails(item.get('link'))
-                    if li_tag.find('span', class_='buttons'):
-                        item['buttons']['text'] = li_tag.find('span', class_='buttons').text.strip()
-                        item['buttons']['link'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
+                    # if li_tag.find('span', class_='buttons'):
+                    #     item['buttons']['text'] = li_tag.find('span', class_='buttons').text.strip()
+                    #     item['buttons']['link'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
                     # append the item to the current section
                     month_actions[currentSection].append(item)
                     # month_actions[-1]['items'].append(item)
@@ -172,3 +184,38 @@ class ComponentSession(object):
         return calendarDict
         
 
+
+    def getPlants(self):
+        # https://www.mijntuin.org/login, POST
+        # example payload
+        # form data: email=username%40gmail.com&password=password&login=Aanmelden
+        # example response, HTTP 302
+        header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE"}
+        response = self.s.get(self.gardenlink+'/all',headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
+        # cookies = response.cookies
+        _LOGGER.debug(f"{NAME} gardenlink response.status_code {response.status_code}, login header: {response.headers}")
+        # _LOGGER.info(f"{NAME} calendarlink result status code: {response.status_code}, response: {response.text}")
+        # assert response.status_code == 302
+        soup = BeautifulSoup(response.text, 'html.parser')
+        div_calendar = soup.find('div', class_='whitebox')
+
+        plants = []
+
+        for li in div_calendar.select('#grid li'):
+            name = li.select_one('.name').text
+            photo = li.select_one('.photo img')['src']
+            latin_name = li.select_one('.extra').text
+            # remove_url = li.select_one('.removePlant')['href']
+            # add_wishlist_url = li.select_one('.wish')['href']
+            # add_exchange_url = li.select_one('.exchange')['href']
+            plants.append({
+                'name': name,
+                'photo': photo,
+                'latin_name': latin_name
+                #, 'remove_url': remove_url,
+                # 'add_wishlist_url': add_wishlist_url,
+                # 'add_exchange_url': add_exchange_url
+            })
+
+        return plants
+        
