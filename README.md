@@ -63,7 +63,7 @@ content: >-
     
     -  <details>
        <summary> 
-       <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b>{{ plant.get('name') }}</b>: {{ plant.get('description') }}</summary>
+       <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b><a href="{{ plant.get('plant_link') }}" target="_blank" title="{{ plant.get('latin_name') }}">{{ plant.get('name') }}</a></b>: {{ plant.get('description') }}</summary>
         {% if plant.get('details','')|length  > 0 %}
         - {{ plant.get('details') }}
         {% endif %}
@@ -83,7 +83,10 @@ content: >-
 
   ### Planten: 
 
-  {{state_attr('sensor.mijn_tuin','Plants')}}
+  {% for plant in state_attr('sensor.mijn_tuin','Plants')
+  %}[{{plant.get('name')}}]({{plant.get('link')}}
+  "{{plant.get('latin_name')}}"), {% endfor %}
+
 
 ```
 
