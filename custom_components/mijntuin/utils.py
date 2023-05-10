@@ -116,10 +116,10 @@ class ComponentSession(object):
         
         # return [link, description]
 
-        return description
+        return description[:800]
 
     
-    def getCalendar(self):
+    def getCalendar(self, plants):
         # https://www.mijntuin.org/login, POST
         # example payload
         # form data: email=username%40gmail.com&password=password&login=Aanmelden
@@ -163,13 +163,17 @@ class ComponentSession(object):
                     month_actions[currentSection] = []
                 else:
                     # create a new item dictionary
-                    item = {'name': '', 'description': '','photo': {}, 'link': '', 'buttons':{}}
+                    item = {'name': '', 'description': '','photo': {}, 'link': ''}
                     item['photo']['alt'] = li_tag.find('img').get('alt', '')
                     item['photo']['src'] = li_tag.find('img').get('src', '')
                     nameAndDescription = li_tag.find('span', class_='name').text.strip().split(": ")
                     item['name'] = nameAndDescription[0]
                     item['description'] = nameAndDescription[1].capitalize()
                     item['link'] = li_tag.find('span', class_='extra').find('a').get('href', '')
+                    plant_details = plants.get(nameAndDescription[0])
+                    if plant_details:
+                        item['plant_link'] = plant_details.get('link')
+                        item['latin_name'] = plant_details.get('latin_name')
                     if currMonth == month_name and item.get('link'):
                         item['details'] = self.getTaskDetails(item.get('link'))
                     # if li_tag.find('span', class_='buttons'):
@@ -199,23 +203,28 @@ class ComponentSession(object):
         soup = BeautifulSoup(response.text, 'html.parser')
         div_calendar = soup.find('div', class_='whitebox')
 
-        plants = []
-
+        plants = dict()
+        index = 0
         for li in div_calendar.select('#grid li'):
+            link = li.select_one('a')['href']
             name = li.select_one('.name').text
             photo = li.select_one('.photo img')['src']
             latin_name = li.select_one('.extra').text
             # remove_url = li.select_one('.removePlant')['href']
             # add_wishlist_url = li.select_one('.wish')['href']
             # add_exchange_url = li.select_one('.exchange')['href']
-            plants.append({
+            plants[name] = {
                 'name': name,
+                'link': link,
                 'photo': photo,
                 'latin_name': latin_name
                 #, 'remove_url': remove_url,
                 # 'add_wishlist_url': add_wishlist_url,
                 # 'add_exchange_url': add_exchange_url
-            })
+            }
+            index += 1
+            if index > 100:
+                _LOGGER.error(f"Many plants {index} detected, this may lead to overload & instability of HA!")
 
         return plants
         

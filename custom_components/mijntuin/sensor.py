@@ -99,7 +99,7 @@ class ComponentData:
         self._calendarData = None
         self._activities = dict()
         self._months = dict()
-        self._plants = []
+        self._plants = dict()
         
     # same as update, but without throttle to make sure init is always executed
     async def _force_update(self):
@@ -110,21 +110,20 @@ class ComponentData:
         if self._session:
             gardenLink = await self._hass.async_add_executor_job(lambda: self._session.login(self._username, self._password))
             _LOGGER.info(f"{NAME} login completed, garden link: {gardenLink}")
-            self._calendarData = await self._hass.async_add_executor_job(lambda: self._session.getCalendar())
-            _LOGGER.info(f"{NAME} calendar data update")
             self._lastupdate = datetime.now()
             self._activities = dict()
             self._months = dict()
-            self._plants = []
+            self._plants = dict()
+
             self._plants = await self._hass.async_add_executor_job(lambda: self._session.getPlants())
+            self._calendarData = await self._hass.async_add_executor_job(lambda: self._session.getCalendar(self._plants))
+            _LOGGER.info(f"{NAME} calendar data update")
             for month, monthData in self._calendarData.items():
                 month_name = calendar.month_name[int(month.split("-")[0])]
                 # _LOGGER.info(f"Mijn Tuin updating month {month_name} for acitivty {self._activityType}")
                 for activity, plants in monthData.items():
                     self._activities[activity] = self._activities.get(activity,0) + 1
                     self._months[month_name] = self._months.get(month_name,0) + 1
-                    # for plant in plants:
-                    #     self._plants[plant.get("name")] = self._plants.get(plant.get("name"),0) + 1
             
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _update(self):
@@ -194,7 +193,7 @@ class ComponentSensorGeneral(Entity):
             ATTR_ATTRIBUTION: NAME,
             "last update": self._last_update,
             "activitiesThisMonth": self._numberOfActivitiesThisMonth,
-            "Plants": self._data._plants,
+            "Plants": list(self._data._plants.values()),
             "Activities": ', '.join(str(key) for key in self._data._activities.keys()),
             "January": self._data._months.get("January",0),
             "February": self._data._months.get("February",0),
@@ -263,7 +262,7 @@ class ComponentSensor(Entity):
                 # _LOGGER.info(f"Mijn Tuin updating month {month_name} for acitivty {self._activityType}, curr activity {activity}")
                 if activity.lower() == self._activityType.lower():                        
                     if currMonth == month_name:
-                        self._numberOfActionsThisMonth = self._numberOfActionsThisMonth  + 1
+                        self._numberOfActionsThisMonth = self._numberOfActionsThisMonth  + len(plants)
                         if self._activities.get(month_name):
                             self._activities[month_name].append(plants)
                         else:
