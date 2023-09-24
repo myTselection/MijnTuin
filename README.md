@@ -16,7 +16,7 @@ This integration is in no way affiliated with MijnTuin.org. At least a free acco
 
 
 ## Installation
-- [HACS](https://hacs.xyz/): add url https://github.com/myTselection/MijnTuin as custom repository (HACS > Integration > option: Custom Repositories)
+- [HACS](https://hacs.xyz/): search for the integration in the list of HACS
 - Restart Home Assistant
 - Add 'MijnTuin' integration via HA Settings > 'Devices and Services' > 'Integrations'
 - Provide MijnTuin username and password
