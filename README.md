@@ -56,23 +56,54 @@ content: >-
 
   {% set this_month = now().strftime("%B") %}
 
+  {% set currplants = state_attr(activity,this_month) | list %}
+
+  {% set currplantstodo = currplants | selectattr('buttons','defined') | list %}
+
+  {% set currplantsdone = currplants | rejectattr('buttons','defined') | list %}
+
+
     <details>
     <summary>
     <b>{{state_attr(activity,'activityType') }}: </b> ({{state_attr(activity,this_month)|length }})</summary>
-    {% for plant in state_attr(activity,this_month)  %}
     
+    {% if (currplantstodo | length) > 0 %}
     -  <details>
-       <summary> 
-       <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b>{{ plant.get('name') }}</b>: {{ plant.get('description') }}</summary>
-        {% if plant.get('details','')|length  > 0 %}
-        - {{ plant.get('details') }}
-        {% endif %}
-        
-        - <a href="{{ plant.get('link') }}" target="_blank">link</a>
-        
+       <summary>Te doen</summary>
+       {% for plant in currplantstodo  %}
+         - <details>
+           <summary> 
+           <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b><a href="{{ plant.get('plant_link') }}" target="_blank" title="{{ plant.get('latin_name') }}">{{ plant.get('name') }}</a></b>: {{ plant.get('description') }}</summary>
+            {% if plant.get('details','')|length  > 0 %}
+            - {{ plant.get('details') }}
+            {% endif %}
+            
+            - <a href="{{ plant.get('link') }}" target="_blank">link</a>
+            {% if plant.get('buttons','')|length  > 0 %}- <a href="{{ plant.get('buttons')}}" target="_blank">Markeer als gedaan</a>{% endif %}
+            
+            </details> 
+        {% endfor %}
         </details>
-    
-    {% endfor %}
+    {% endif %}
+    {% if (currplantsdone | length) > 0 %}
+    -  <details>
+       <summary>Gedaan</summary>
+       {% for plant in currplantsdone  %}
+         - <details>
+           <summary> 
+           <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b><a href="{{ plant.get('plant_link') }}" target="_blank" title="{{ plant.get('latin_name') }}">{{ plant.get('name') }}</a></b>: {{ plant.get('description') }}</summary>
+            {% if plant.get('details','')|length  > 0 %}
+            - {{ plant.get('details') }}
+            {% endif %}
+            
+            - <a href="{{ plant.get('link') }}" target="_blank">link</a>
+            {% if plant.get('buttons','')|length  > 0 %}- <a href="{{ plant.get('buttons')}}" target="_blank">markeer als gedaan</a>{% endif %}
+            
+            </details> 
+            {% endfor %}
+        </details>
+    {% endif %}
+
 
     </details></br>
 
@@ -83,7 +114,9 @@ content: >-
 
   ### Planten: 
 
-  {{state_attr('sensor.mijn_tuin','Plants')}}
+  {% for plant in state_attr('sensor.mijn_tuin','Plants')
+  %}[{{plant.get('name')}}]({{plant.get('link')}}
+  "{{plant.get('latin_name')}}"), {% endfor %}
 
 ```
 

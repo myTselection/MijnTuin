@@ -163,6 +163,7 @@ class ComponentSession(object):
                     month_actions[currentSection] = []
                 else:
                     # create a new item dictionary
+                    # item = {'name': '', 'description': '','photo': {}, 'link': '', 'buttons': {'text':'','link':''}}
                     item = {'name': '', 'description': '','photo': {}, 'link': ''}
                     item['photo']['alt'] = li_tag.find('img').get('alt', '')
                     item['photo']['src'] = li_tag.find('img').get('src', '')
@@ -176,9 +177,10 @@ class ComponentSession(object):
                         item['latin_name'] = plant_details.get('latin_name')
                     if currMonth == month_name and item.get('link'):
                         item['details'] = self.getTaskDetails(item.get('link'))
-                    # if li_tag.find('span', class_='buttons'):
-                    #     item['buttons']['text'] = li_tag.find('span', class_='buttons').text.strip()
-                    #     item['buttons']['link'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
+                    if li_tag.find('span', class_='buttons'):
+                        item['buttons'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
+                        # item['buttons']['text'] = li_tag.find('span', class_='buttons').text.strip()
+                        # item['buttons']['link'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
                     # append the item to the current section
                     month_actions[currentSection].append(item)
                     # month_actions[-1]['items'].append(item)
