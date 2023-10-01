@@ -1,4 +1,4 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-blue.svg)](https://github.com/hacs/default)
 [![GitHub release](https://img.shields.io/github/release/myTselection/MijnTuin.svg)](https://github.com/myTselection/MijnTuin/releases)
 ![GitHub repo size](https://img.shields.io/github/repo-size/myTselection/MijnTuin.svg)
 
@@ -6,7 +6,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/myTselection/MijnTuin.svg)](https://github.com/myTselection/MijnTuin/commits/master)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/myTselection/MijnTuin.svg)](https://github.com/myTselection/MijnTuin/graphs/commit-activity)
 
-# MijnTuin
+# MijnTuin Home Assistant integration
 [MijnTuin.org](https://www.mijntuin.org/) Home Assistant custom component. This custom component has been built from the ground up to bring your Mijn Tuin garden planning details into Home Assistant to help you towards a better follow upon your garden. This integration is built against the public website provided by MijnTuin.org.
 
 This integration is in no way affiliated with MijnTuin.org. At least a free account of the website MijnTuin.org is required. The management of your garden and plants in your garden needs to be setup on the website MijnTuin.org.
@@ -16,12 +16,20 @@ This integration is in no way affiliated with MijnTuin.org. At least a free acco
 
 
 ## Installation
-- [HACS](https://hacs.xyz/): add url https://github.com/myTselection/MijnTuin as custom repository (HACS > Integration > option: Custom Repositories)
+- [HACS](https://hacs.xyz/): search for the integration in the list of HACS
 - Restart Home Assistant
 - Add 'MijnTuin' integration via HA Settings > 'Devices and Services' > 'Integrations'
 - Provide MijnTuin username and password
 - Sensor `mijntuin` should become available with the number of action to take this month. The attributes provide further details on the type of activities in your garden, the plants and the number of activities per month.
 - For each type of activity a sensor should become available with the number of action for this activity to take this month. The attributes provide further details per month.
+
+Since the sensors of this Mijn Tuin integration may contain much data in the attributes, it might be desired to disable full detailed history logging in the recorder of Home Assistant. You may disable it by adding below in `configuration.yaml`:
+```
+recorder:
+  exclude:
+    entity_globs:
+      - sensor.mijn_tuin*
+```
 
 ## Status
 Still some optimisations are planned, see [Issues](https://github.com/myTselection/MijnTuin/issues) section in GitHub.
@@ -114,9 +122,7 @@ content: >-
 
   ### Planten: 
 
-  {% for plant in state_attr('sensor.mijn_tuin','Plants')
-  %}[{{plant.get('name')}}]({{plant.get('link')}}
-  "{{plant.get('latin_name')}}"), {% endfor %}
+  {{state_attr('sensor.mijn_tuin','Plants')}}
 
 ```
 
