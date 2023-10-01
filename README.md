@@ -122,7 +122,9 @@ content: >-
 
   ### Planten: 
 
-  {{state_attr('sensor.mijn_tuin','Plants')}}
+  {% for plant in state_attr('sensor.mijn_tuin','Plants')
+  %}[{{plant.get('name')}}]({{plant.get('link')}}
+  "{{plant.get('latin_name')}}"), {% endfor %}
 
 ```
 
