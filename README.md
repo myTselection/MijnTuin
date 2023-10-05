@@ -22,7 +22,7 @@ This integration is in no way affiliated with MijnTuin.org. At least a free acco
 - Provide MijnTuin username and password
 - Sensor `mijntuin` should become available with the number of action to take this month. The attributes provide further details on the type of activities in your garden, the plants and the number of activities per month.
 - For each type of activity a sensor should become available with the number of action for this activity to take this month. The attributes provide further details per month.
-- A service 'service: mijntuin.update' is availabel that allows to 'force' refresh the data. This can be usefull to quickly see the latest status of completed tasks. Standard data refersh is throttled and updated every hour.
+- A service `service: mijntuin.update` is availabel that allows to 'force' refresh the data. This can be useful to quickly see the latest status of completed tasks. Standard data refresh is throttled and updated every hour.
 
 Since the sensors of this Mijn Tuin integration may contain much data in the attributes, it might be desired to disable full detailed history logging in the recorder of Home Assistant. You may disable it by adding below in `configuration.yaml`:
 ```
