@@ -1,0 +1,5 @@
+# Describes the format for available services
+      
+update:
+  description: >
+    Force an update of the sensor data (standard updates are throttled per hour).

@@ -1,6 +1,6 @@
 {
     "config": {
-        "title": "MijnTuin",
+        "title": "Mijn Tuin",
         "step": {
             "user": {
                 "description": "Username and password are required.",
@@ -41,5 +41,12 @@
             "missing data options handler": "Option handler failed",
             "no_valid_settings": "No valid settings, provide username, password in ha config."
         }
+    },
+    "services": {
+        "update": {
+            "name": "Update",
+            "description": "Force an update of the sensor data (standard updates are throttled per hour)."
+        }
+
     }
 }

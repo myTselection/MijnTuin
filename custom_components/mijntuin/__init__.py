@@ -81,6 +81,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, Platform.SENSOR)
     )
+    _LOGGER.info(f"{DOMAIN} register_services")
+    register_services(hass, config_entry)
     return True
 
 
@@ -90,3 +92,18 @@ async def async_remove_entry(hass, config_entry):
         _LOGGER.info("Successfully removed sensor from the integration")
     except ValueError:
         pass
+
+
+
+def register_services(hass, config_entry):
+        
+    async def handle_update(call):
+        """Handle the service call."""
+        state_general_sensor = hass.states.get(f"sensor.{NAME.lower().replace(' ', '_')}")
+        _LOGGER.debug(f"state_general_sensor sensor.{NAME.lower().replace(' ', '_')} {state_general_sensor}")
+        state_general_sensor_attributes = dict(state_general_sensor.attributes)
+        state_general_sensor_attributes["refresh_required"] = True
+        await hass.async_add_executor_job(lambda: hass.states.set(f"sensor.{NAME.lower().replace(' ', '_')}",state_general_sensor.state,state_general_sensor_attributes))
+
+    hass.services.async_register(DOMAIN, 'update', handle_update)
+    _LOGGER.info(f"async_register done")

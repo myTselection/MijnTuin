@@ -1,0 +1,50 @@
+{
+    "config": {
+        "title": "Mijn Tuin",
+        "step": {
+            "user": {
+                "description": "Gebruikersnaam en wachtwoord zijn vereist.",
+                "data": {
+                    "username": "Gebruikersnaam",
+                    "password": "Wachtwoord"
+                }
+            },
+            "edit": {
+                "description": "Gebruikersnaam en wachtwoord zijn vereist.",
+                "data": {
+                    "username": "Gebruikersnaam",
+                    "password": "Wachtwoord"
+                }
+            }
+        },
+        "error": {
+            "missing username": "Geef een geldige gebruikersnaam op",
+            "missing password": "Geef een geldig wachtwoord op",
+            "missing data options handler": "Optiebeheerder is mislukt",
+            "no_valid_settings": "Geen geldige instellingen, voorzie gebruikersnaam en wachtwoord in de HA-configuratie."
+        }
+    },
+    "options": {
+        "step": {
+            "edit": {
+                "description": "Gebruikersnaam en wachtwoord zijn vereist.",
+                "data": {
+                    "username": "Gebruikersnaam",
+                    "password": "Wachtwoord"
+                }
+            }
+        },
+        "error": {
+            "missing username": "Geef een geldige gebruikersnaam op",
+            "missing password": "Geef een geldig wachtwoord op",
+            "missing data options handler": "Optiebeheerder is mislukt",
+            "no_valid_settings": "Geen geldige instellingen, voorzie gebruikersnaam en wachtwoord in de HA-configuratie."
+        }
+    },
+    "services": {
+        "update": {
+            "name": "Bijwerken",
+            "description": "Forceer een update van de sensordata (standaardupdates worden per uur beperkt)."
+        }
+    }
+}
