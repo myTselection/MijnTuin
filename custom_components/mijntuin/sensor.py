@@ -7,7 +7,7 @@ import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, DeviceInfo
 from homeassistant.util import Throttle
 
 from . import DOMAIN, NAME
@@ -147,6 +147,14 @@ class ComponentData:
     def clear_session(self):
         self._session : None
 
+    @property
+    def unique_id(self):
+        return f"{NAME} {self._username}"
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return self.unique_id
+
 class ComponentSensorGeneral(Entity):
     def __init__(self, data, hass):
         self._data = data
@@ -224,14 +232,17 @@ class ComponentSensorGeneral(Entity):
         }
 
     @property
-    def device_info(self) -> dict:
-        """I can't remember why this was needed :D"""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": DOMAIN,
-        }
-
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (NAME, self._data.unique_id)
+            },
+            name=self._data.name,
+            manufacturer= NAME
+        )
+    
     @property
     def unit(self) -> int:
         """Unit"""
@@ -307,7 +318,7 @@ class ComponentSensor(Entity):
 
     @property
     def name(self) -> str:
-        return self.unique_id
+        return self._activityType
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -331,15 +342,18 @@ class ComponentSensor(Entity):
             "December": self._activities.get("December",0)
         }
 
-    @property
-    def device_info(self) -> dict:
-        """I can't remember why this was needed :D"""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": DOMAIN,
-        }
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (NAME, self._data.unique_id)
+            },
+            name=self._data.name,
+            manufacturer= NAME
+        )
     @property
     def unit(self) -> int:
         """Unit"""
