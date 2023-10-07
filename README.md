@@ -17,11 +17,13 @@ This integration is in no way affiliated with MijnTuin.org. At least a free acco
 
 ## Installation
 - [HACS](https://hacs.xyz/): search for the integration in the list of HACS
+  - [![Open your Home Assistant instance and open the repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=myTselection&repository=MijnTuin&category=integration)
 - Restart Home Assistant
 - Add 'MijnTuin' integration via HA Settings > 'Devices and Services' > 'Integrations'
 - Provide MijnTuin username and password
 - Sensor `mijntuin` should become available with the number of action to take this month. The attributes provide further details on the type of activities in your garden, the plants and the number of activities per month.
 - For each type of activity a sensor should become available with the number of action for this activity to take this month. The attributes provide further details per month.
+- A service `service: mijntuin.update` is available that allows to 'force' refresh the data. This can be useful to quickly see the latest status of completed tasks. Standard data refresh is throttled and updated every hour.
 
 Since the sensors of this Mijn Tuin integration may contain much data in the attributes, it might be desired to disable full detailed history logging in the recorder of Home Assistant. You may disable it by adding below in `configuration.yaml`:
 ```
@@ -129,3 +131,19 @@ content: >-
 ```
 
 </details>
+
+## Example Update button
+<details><summary><b>Card example code</b></summary>
+
+```
+type: button
+show_name: true
+show_icon: true
+tap_action:
+  action: call-service
+  service: mijntuin.update
+  target: {}
+entity: ''
+icon: mdi:update
+icon_height: 30px
+
