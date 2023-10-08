@@ -318,7 +318,7 @@ class ComponentSensor(Entity):
 
     @property
     def name(self) -> str:
-        return self._activityType
+        return self.unique_id
 
     @property
     def extra_state_attributes(self) -> dict:
