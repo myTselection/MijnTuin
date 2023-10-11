@@ -70,8 +70,10 @@ class ComponentSession(object):
         # assert response.status_code == 200
         soup = BeautifulSoup(response.text, 'html.parser')
         li_calendar  = soup.select_one("li#calendar")
-        if li_calendar:
-            self.gardenlink = li_calendar.a.get('href')
+        if li_calendar is None:
+            _LOGGER.error(f"Failure to login MijnTuin, please check username and password")
+        assert li_calendar != None
+        self.gardenlink = li_calendar.a.get('href')
         _LOGGER.debug(f"MijnTuin calendarlink {self.gardenlink}")
         self.gardenlink = self.gardenlink.replace('/calendar','')
         return self.gardenlink
