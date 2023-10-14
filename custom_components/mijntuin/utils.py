@@ -56,24 +56,32 @@ class ComponentSession(object):
         data  = {"email": username, "password": password, "login": "Aanmelden"}
         # self.cookies = response.cookies
         header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE","referer":"https://www.mijntuin.org/login"}
-        response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,cookies=self.cookies, timeout=40,allow_redirects=False)
-        _LOGGER.debug(f"MijnTuin login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
-        _LOGGER.debug(f"MijnTuin response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
-        # assert response.status_code == 302
+        login_response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,cookies=self.cookies, timeout=40,allow_redirects=False)
+        _LOGGER.debug(f"MijnTuin login post result status code: {login_response.status_code}, login_response: {login_response.text}, login cookies: {login_response.cookies}")
+        _LOGGER.debug(f"MijnTuin response.status_code {login_response.status_code}, login header: {login_response.headers}, login cookies: {login_response.cookies}")
+        # assert login_response.status_code == 302
         # self.cookies = response.cookies
         response = self.s.get("https://www.mijntuin.org/",headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
         # self.cookies = response.cookies
         response = self.s.get("https://www.mijntuin.org/dashboard",headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
         # self.cookies = response.cookies
         _LOGGER.debug(f"MijnTuin https://www.mijntuin.org/dashboard get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
-        _LOGGER.debug(f"MijnTuin login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
+        _LOGGER.debug(f"MijnTuin login get dashboard status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
         # assert response.status_code == 200
+        soup = BeautifulSoup(login_response.text, 'html.parser')
+        # Find the div with the specified class
+        loginFailureNotification = soup.find('div', class_='alert alert-danger')
+
+        # Extract the text from the div
+        if loginFailureNotification:
+            loginFailureNotification_text = loginFailureNotification.get_text()
+            _LOGGER.error(f"Failure to login MijnTuin, please check username and password: {loginFailureNotification_text}")
+            raise Exception(f"Failure to login MijnTuin, please check username and password: {loginFailureNotification_text}")
         soup = BeautifulSoup(response.text, 'html.parser')
         li_calendar  = soup.select_one("li#calendar")
-        if li_calendar is None:
-            _LOGGER.error(f"Failure to login MijnTuin, please check username and password")
         assert li_calendar != None
         self.gardenlink = li_calendar.a.get('href')
+        assert self.gardenlink != None
         _LOGGER.debug(f"MijnTuin calendarlink {self.gardenlink}")
         self.gardenlink = self.gardenlink.replace('/calendar','')
         return self.gardenlink
