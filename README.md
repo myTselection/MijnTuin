@@ -10,6 +10,7 @@
 [MijnTuin.org](https://www.mijntuin.org/) Home Assistant custom component. This custom component has been built from the ground up to bring your Mijn Tuin garden planning details into Home Assistant to help you towards a better follow upon your garden. This integration is built against the public website provided by MijnTuin.org.
 
 This integration is in no way affiliated with MijnTuin.org. At least a free account of the website MijnTuin.org is required. The management of your garden and plants in your garden needs to be setup on the website MijnTuin.org.
+**Please don't report issues with this integration to MijnTuin.org, they will not be able to support you.**
 
 
 <p align="center"><img src="https://raw.githubusercontent.com/myTselection/MijnTuin/master/icon.png"/></p>
