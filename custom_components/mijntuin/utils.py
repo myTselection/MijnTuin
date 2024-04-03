@@ -8,10 +8,7 @@ from typing import List
 import requests
 from bs4 import BeautifulSoup
 
-# from . import DOMAIN, NAME
 
-DOMAIN = "mijntuin"
-NAME = "Mijn Tuin"
 import voluptuous as vol
 
 
@@ -47,7 +44,7 @@ class ComponentSession(object):
     # example response, HTTP 302
         header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE"}
         response = self.s.get("https://www.mijntuin.org/",headers=header,timeout=40,allow_redirects=False)
-        _LOGGER.debug(f"{NAME} https://www.mijntuin.org get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
+        _LOGGER.debug(f"MijnTuin https://www.mijntuin.org get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
         self.cookies["PHPSESSID"] = response.cookies.get("PHPSESSID")
         self.cookies["session"] = response.cookies.get("session")
         self.s.cookies["PHPSESSID"] = response.cookies.get("PHPSESSID")
@@ -55,27 +52,37 @@ class ComponentSession(object):
         _LOGGER.debug(f"cookies: {self.cookies}")
         response = self.s.get("https://www.mijntuin.org/login",headers=header, cookies=self.cookies,timeout=40,allow_redirects=False)
         # assert response.status_code == 200
-        _LOGGER.debug(f"{NAME} https://www.mijntuin.org/login get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
+        _LOGGER.debug(f"MijnTuin https://www.mijntuin.org/login get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
         data  = {"email": username, "password": password, "login": "Aanmelden"}
         # self.cookies = response.cookies
         header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE","referer":"https://www.mijntuin.org/login"}
-        response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,cookies=self.cookies, timeout=40,allow_redirects=False)
-        _LOGGER.debug(f"{NAME} login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
-        _LOGGER.debug(f"{NAME} response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
-        # assert response.status_code == 302
+        login_response = self.s.post("https://www.mijntuin.org/login",data=data,headers=header,cookies=self.cookies, timeout=40,allow_redirects=False)
+        _LOGGER.debug(f"MijnTuin login post result status code: {login_response.status_code}, login_response: {login_response.text}, login cookies: {login_response.cookies}")
+        _LOGGER.debug(f"MijnTuin response.status_code {login_response.status_code}, login header: {login_response.headers}, login cookies: {login_response.cookies}")
+        # assert login_response.status_code == 302
         # self.cookies = response.cookies
         response = self.s.get("https://www.mijntuin.org/",headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
         # self.cookies = response.cookies
         response = self.s.get("https://www.mijntuin.org/dashboard",headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
         # self.cookies = response.cookies
-        _LOGGER.debug(f"{NAME} https://www.mijntuin.org/dashboard get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
-        _LOGGER.debug(f"{NAME} login post result status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
+        _LOGGER.debug(f"MijnTuin https://www.mijntuin.org/dashboard get response.status_code {response.status_code}, login header: {response.headers}, login cookies: {response.cookies}")
+        _LOGGER.debug(f"MijnTuin login get dashboard status code: {response.status_code}, response: {response.text}, login cookies: {response.cookies}")
         # assert response.status_code == 200
+        soup = BeautifulSoup(login_response.text, 'html.parser')
+        # Find the div with the specified class
+        loginFailureNotification = soup.find('div', class_='alert alert-danger')
+
+        # Extract the text from the div
+        if loginFailureNotification:
+            loginFailureNotification_text = loginFailureNotification.get_text()
+            _LOGGER.error(f"Failure to login MijnTuin, please check username and password: {loginFailureNotification_text}")
+            raise Exception(f"Failure to login MijnTuin, please check username and password: {loginFailureNotification_text}")
         soup = BeautifulSoup(response.text, 'html.parser')
         li_calendar  = soup.select_one("li#calendar")
-        if li_calendar:
-            self.gardenlink = li_calendar.a.get('href')
-        _LOGGER.debug(f"{NAME} calendarlink {self.gardenlink}")
+        assert li_calendar != None
+        self.gardenlink = li_calendar.a.get('href')
+        assert self.gardenlink != None
+        _LOGGER.debug(f"MijnTuin calendarlink {self.gardenlink}")
         self.gardenlink = self.gardenlink.replace('/calendar','')
         return self.gardenlink
     
@@ -87,8 +94,8 @@ class ComponentSession(object):
         header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE"}
         response = self.s.get(tasklink,headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
         # cookies = response.cookies
-        _LOGGER.debug(f"{NAME} tasklink response.status_code {response.status_code}, login header: {response.headers}")
-        # _LOGGER.info(f"{NAME} calendarlink result status code: {response.status_code}, response: {response.text}")
+        _LOGGER.debug(f"MijnTuin tasklink response.status_code {response.status_code}, login header: {response.headers}")
+        # _LOGGER.info(f"MijnTuin calendarlink result status code: {response.status_code}, response: {response.text}")
         # assert response.status_code == 302
         soup = BeautifulSoup(response.text, 'html.parser')
         
@@ -127,8 +134,8 @@ class ComponentSession(object):
         header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE"}
         response = self.s.get(self.gardenlink+'/calendar',headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
         # cookies = response.cookies
-        _LOGGER.debug(f"{NAME} calendarlink response.status_code {response.status_code}, login header: {response.headers}")
-        # _LOGGER.info(f"{NAME} calendarlink result status code: {response.status_code}, response: {response.text}")
+        _LOGGER.debug(f"MijnTuin calendarlink response.status_code {response.status_code}, login header: {response.headers}")
+        # _LOGGER.info(f"MijnTuin calendarlink result status code: {response.status_code}, response: {response.text}")
         # assert response.status_code == 302
         soup = BeautifulSoup(response.text, 'html.parser')
         div_calendar = soup.find('div', class_='whitebox')
@@ -163,6 +170,7 @@ class ComponentSession(object):
                     month_actions[currentSection] = []
                 else:
                     # create a new item dictionary
+                    # item = {'name': '', 'description': '','photo': {}, 'link': '', 'buttons': {'text':'','link':''}}
                     item = {'name': '', 'description': '','photo': {}, 'link': ''}
                     item['photo']['alt'] = li_tag.find('img').get('alt', '')
                     item['photo']['src'] = li_tag.find('img').get('src', '')
@@ -176,13 +184,14 @@ class ComponentSession(object):
                         item['latin_name'] = plant_details.get('latin_name')
                     if currMonth == month_name and item.get('link'):
                         item['details'] = self.getTaskDetails(item.get('link'))
-                    # if li_tag.find('span', class_='buttons'):
-                    #     item['buttons']['text'] = li_tag.find('span', class_='buttons').text.strip()
-                    #     item['buttons']['link'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
+                    if li_tag.find('span', class_='buttons'):
+                        item['buttons'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
+                        # item['buttons']['text'] = li_tag.find('span', class_='buttons').text.strip()
+                        # item['buttons']['link'] = li_tag.find('span', class_='buttons').find('a').get('href', '')
                     # append the item to the current section
                     month_actions[currentSection].append(item)
                     # month_actions[-1]['items'].append(item)
-            _LOGGER.debug(f"{NAME} calendar month {month}, month_actions {month_actions}")
+            _LOGGER.debug(f"MijnTuin calendar month {month}, month_actions {month_actions}")
             calendarDict[month] = month_actions
 
         return calendarDict
@@ -197,8 +206,8 @@ class ComponentSession(object):
         header = {"Content-Type": "application/x-www-form-urlencoded","accept-language":"nl-BE"}
         response = self.s.get(self.gardenlink+'/all',headers=header,cookies=self.cookies,timeout=40,allow_redirects=False)
         # cookies = response.cookies
-        _LOGGER.debug(f"{NAME} gardenlink response.status_code {response.status_code}, login header: {response.headers}")
-        # _LOGGER.info(f"{NAME} calendarlink result status code: {response.status_code}, response: {response.text}")
+        _LOGGER.debug(f"MijnTuin gardenlink response.status_code {response.status_code}, login header: {response.headers}")
+        # _LOGGER.info(f"MijnTuin calendarlink result status code: {response.status_code}, response: {response.text}")
         # assert response.status_code == 302
         soup = BeautifulSoup(response.text, 'html.parser')
         div_calendar = soup.find('div', class_='whitebox')

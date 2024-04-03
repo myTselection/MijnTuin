@@ -1,0 +1,52 @@
+{
+    "config": {
+        "title": "Mijn Tuin",
+        "step": {
+            "user": {
+                "description": "Utilizador e senha são obrigatórios.",
+                "data": {
+                    "username": "Utilizador",
+                    "password": "Senha"
+                }
+            },
+            "edit": {
+                "description": "Utilizador e senha são obrigatórios.",
+                "data": {
+                    "username": "Utilizador",
+                    "password": "Senha"
+                }
+            }
+
+        },
+        "error": {
+            "missing username": "Inserir um nome de Utilizador válido",
+            "missing password": "Inserir uma senha válida",
+            "missing data options handler": "Opcção errada",
+            "no_valid_settings": "Configuraçõea erradas inserir utilizador e senha no ficheiro do HA."
+        }
+    },
+    "options": {
+        "step": {
+            "edit": {
+                "description": "Utilizador e senha são obrigatórios.",
+                "data": {
+                    "username": "Utilizador",
+                    "password": "Senha"
+                }
+            }
+        },
+        "error": {
+            "missing username": "Inserir um nome de Utilizador válido",
+            "missing password": "Inserir uma senha válida",
+            "missing data options handler": "Opcção errada",
+            "no_valid_settings": "Configuraçõea erradas inserir utilizador e senha no ficheiro do HA."
+        }
+    },
+    "services": {
+        "update": {
+            "name": "Atualização",
+            "description": "Forçar uma atualização dos dados do sensor (as atualizações padrão são limitadas por hora)."
+        }
+
+    }
+}

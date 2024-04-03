@@ -11,17 +11,22 @@
 
 This integration is in no way affiliated with MijnTuin.org. At least a free account of the website MijnTuin.org is required. The management of your garden and plants in your garden needs to be setup on the website MijnTuin.org.
 
+| :warning: Please don't report issues with this integration to MijnTuin.org, they will not be able to support you. |
+| --------------------------------------------------------------------------------------------------------------------|
+
 
 <p align="center"><img src="https://raw.githubusercontent.com/myTselection/MijnTuin/master/icon.png"/></p>
 
 
 ## Installation
 - [HACS](https://hacs.xyz/): search for the integration in the list of HACS
+  - [![Open your Home Assistant instance and open the repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg?style=flat-square)](https://my.home-assistant.io/redirect/hacs_repository/?owner=myTselection&repository=MijnTuin&category=integration)
 - Restart Home Assistant
 - Add 'MijnTuin' integration via HA Settings > 'Devices and Services' > 'Integrations'
 - Provide MijnTuin username and password
 - Sensor `mijntuin` should become available with the number of action to take this month. The attributes provide further details on the type of activities in your garden, the plants and the number of activities per month.
 - For each type of activity a sensor should become available with the number of action for this activity to take this month. The attributes provide further details per month.
+- A service `service: mijntuin.update` is available that allows to 'force' refresh the data. This can be useful to quickly see the latest status of completed tasks. Standard data refresh is throttled and updated every hour.
 
 Since the sensors of this Mijn Tuin integration may contain much data in the attributes, it might be desired to disable full detailed history logging in the recorder of Home Assistant. You may disable it by adding below in `configuration.yaml`:
 ```
@@ -64,23 +69,54 @@ content: >-
 
   {% set this_month = now().strftime("%B") %}
 
+  {% set currplants = state_attr(activity,this_month) | list %}
+
+  {% set currplantstodo = currplants | selectattr('buttons','defined') | list %}
+
+  {% set currplantsdone = currplants | rejectattr('buttons','defined') | list %}
+
+
     <details>
     <summary>
     <b>{{state_attr(activity,'activityType') }}: </b> ({{state_attr(activity,this_month)|length }})</summary>
-    {% for plant in state_attr(activity,this_month)  %}
     
+    {% if (currplantstodo | length) > 0 %}
     -  <details>
-       <summary> 
-       <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b><a href="{{ plant.get('plant_link') }}" target="_blank" title="{{ plant.get('latin_name') }}">{{ plant.get('name') }}</a></b>: {{ plant.get('description') }}</summary>
-        {% if plant.get('details','')|length  > 0 %}
-        - {{ plant.get('details') }}
-        {% endif %}
-        
-        - <a href="{{ plant.get('link') }}" target="_blank">link</a>
-        
+       <summary>Te doen</summary>
+       {% for plant in currplantstodo  %}
+         - <details>
+           <summary> 
+           <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b><a href="{{ plant.get('plant_link') }}" target="_blank" title="{{ plant.get('latin_name') }}">{{ plant.get('name') }}</a></b>: {{ plant.get('description') }}</summary>
+            {% if plant.get('details','')|length  > 0 %}
+            - {{ plant.get('details') }}
+            {% endif %}
+            
+            - <a href="{{ plant.get('link') }}" target="_blank">link</a>
+            {% if plant.get('buttons','')|length  > 0 %}- <a href="{{ plant.get('buttons')}}" target="_blank">Markeer als gedaan</a>{% endif %}
+            
+            </details> 
+        {% endfor %}
         </details>
-    
-    {% endfor %}
+    {% endif %}
+    {% if (currplantsdone | length) > 0 %}
+    -  <details>
+       <summary>Gedaan</summary>
+       {% for plant in currplantsdone  %}
+         - <details>
+           <summary> 
+           <img src="{{ plant.get('photo').get('src') }} " width="30"></img> <b><a href="{{ plant.get('plant_link') }}" target="_blank" title="{{ plant.get('latin_name') }}">{{ plant.get('name') }}</a></b>: {{ plant.get('description') }}</summary>
+            {% if plant.get('details','')|length  > 0 %}
+            - {{ plant.get('details') }}
+            {% endif %}
+            
+            - <a href="{{ plant.get('link') }}" target="_blank">link</a>
+            {% if plant.get('buttons','')|length  > 0 %}- <a href="{{ plant.get('buttons')}}" target="_blank">markeer als gedaan</a>{% endif %}
+            
+            </details> 
+            {% endfor %}
+        </details>
+    {% endif %}
+
 
     </details></br>
 
@@ -95,7 +131,22 @@ content: >-
   %}[{{plant.get('name')}}]({{plant.get('link')}}
   "{{plant.get('latin_name')}}"), {% endfor %}
 
-
 ```
 
 </details>
+
+## Example Update button
+<details><summary><b>Card example code</b></summary>
+
+```
+type: button
+show_name: true
+show_icon: true
+tap_action:
+  action: call-service
+  service: mijntuin.update
+  target: {}
+entity: ''
+icon: mdi:update
+icon_height: 30px
+

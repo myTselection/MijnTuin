@@ -2,12 +2,13 @@ import logging
 import asyncio
 from datetime import date, datetime, timedelta
 import calendar
+import random
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, DeviceInfo
 from homeassistant.util import Throttle
 
 from . import DOMAIN, NAME
@@ -24,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=120 + random.uniform(10, 20))
 
 
 async def dry_setup(hass, config_entry, async_add_devices):
@@ -100,10 +101,12 @@ class ComponentData:
         self._activities = dict()
         self._months = dict()
         self._plants = dict()
+        self._refresh_retry = 0
         
     # same as update, but without throttle to make sure init is always executed
     async def _force_update(self):
         _LOGGER.info("Fetching intit stuff for " + NAME)
+        self._refresh_retry += 1
         if not(self._session):
             self._session = ComponentSession()
 
@@ -118,6 +121,7 @@ class ComponentData:
             self._plants = await self._hass.async_add_executor_job(lambda: self._session.getPlants())
             self._calendarData = await self._hass.async_add_executor_job(lambda: self._session.getCalendar(self._plants))
             _LOGGER.info(f"{NAME} calendar data update")
+            self._refresh_retry = 0
             for month, monthData in self._calendarData.items():
                 month_name = calendar.month_name[int(month.split("-")[0])]
                 # _LOGGER.info(f"Mijn Tuin updating month {month_name} for acitivty {self._activityType}")
@@ -130,10 +134,27 @@ class ComponentData:
         await self._force_update()
 
     async def update(self):
-        await self._update()
+        state_general_sensor = self._hass.states.get(f"sensor.{NAME.lower().replace(' ', '_')}")
+        _LOGGER.debug(f"state_general_sensor {state_general_sensor} sensor.{NAME.lower().replace(' ', '_')}")
+        if state_general_sensor is not None and self._refresh_retry < 5:
+            state_general_sensor_attributes = dict(state_general_sensor.attributes)
+            if state_general_sensor_attributes["refresh_required"]:
+                await self._force_update()
+            else:
+                await self._update()
+        else:
+            await self._update()
     
     def clear_session(self):
         self._session : None
+
+    @property
+    def unique_id(self):
+        return f"{NAME} {self._username}"
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return self.unique_id
 
 class ComponentSensorGeneral(Entity):
     def __init__(self, data, hass):
@@ -141,7 +162,8 @@ class ComponentSensorGeneral(Entity):
         self._hass = hass
         self._last_update = None
         self._activities = {}
-        self._numberOfActivitiesThisMonth = 0
+        self._numberOfActivitiesThisMonth = None
+        self._refresh_required = True
 
     @property
     def state(self):
@@ -206,18 +228,22 @@ class ComponentSensorGeneral(Entity):
             "September": self._data._months.get("September",0),
             "October": self._data._months.get("October",0),
             "November": self._data._months.get("November",0),
-            "December": self._data._months.get("December",0)
+            "December": self._data._months.get("December",0), 
+            "refresh_required": False
         }
 
     @property
-    def device_info(self) -> dict:
-        """I can't remember why this was needed :D"""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": DOMAIN,
-        }
-
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (NAME, self._data.unique_id)
+            },
+            name=self._data.name,
+            manufacturer= NAME
+        )
+    
     @property
     def unit(self) -> int:
         """Unit"""
@@ -240,7 +266,7 @@ class ComponentSensor(Entity):
         self._last_update = None
         self._activityType = activityType
         self._activities = {}
-        self._numberOfActionsThisMonth = 0
+        self._numberOfActionsThisMonth = None
 
 
     @property
@@ -317,15 +343,18 @@ class ComponentSensor(Entity):
             "December": self._activities.get("December",0)
         }
 
-    @property
-    def device_info(self) -> dict:
-        """I can't remember why this was needed :D"""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": DOMAIN,
-        }
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (NAME, self._data.unique_id)
+            },
+            name=self._data.name,
+            manufacturer= NAME
+        )
     @property
     def unit(self) -> int:
         """Unit"""
