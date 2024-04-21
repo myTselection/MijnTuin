@@ -6,6 +6,11 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/myTselection/MijnTuin.svg)](https://github.com/myTselection/MijnTuin/commits/master)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/myTselection/MijnTuin.svg)](https://github.com/myTselection/MijnTuin/graphs/commit-activity)
 
+
+| :warning: MijnTuin.org will STOP all activities by end of May 2024. As a consequence, this integration will no longer work and will soon be removed from HACS. |
+| --------------------------------------------------------------------------------------------------------------------|
+
+
 # MijnTuin Home Assistant integration
 [MijnTuin.org](https://www.mijntuin.org/) Home Assistant custom component. This custom component has been built from the ground up to bring your Mijn Tuin garden planning details into Home Assistant to help you towards a better follow upon your garden. This integration is built against the public website provided by MijnTuin.org.
 
